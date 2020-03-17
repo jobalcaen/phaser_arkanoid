@@ -1,47 +1,91 @@
 import 'phaser';
+import { Physics } from 'phaser';
 
-export default class Demo extends Phaser.Scene
+
+const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
+    active: false,
+    visible: false,
+    key: 'Game',
+  }
+
+export default class GameScene extends Phaser.Scene
 {
+
+    private paddle: Phaser.GameObjects.Rectangle & { body: Phaser.Physics.Arcade.Body }
+    private ball: Phaser.GameObjects.Ellipse & { body: Phaser.Physics.Arcade.Body }
+
+    
     constructor ()
     {
-        super('demo');
+        super('sceneConfig');
     }
 
     preload ()
     {
-        this.load.image('logo', 'assets/phaser3-logo.png');
-        this.load.image('libs', 'assets/libs.png');
-        this.load.glsl('bundle', 'assets/plasma-bundle.glsl.js');
-        this.load.glsl('stars', 'assets/starfields.glsl.js');
+        
     }
 
-    create ()
-    {
-        this.add.shader('RGB Shift Field', 0, 0, 800, 600).setOrigin(0);
+    create () {
+      // Paddle
+      this.paddle = this.add.rectangle(400, 550, 100, 10, 0xFFFFFF) as any
+      this.physics.add.existing(this.paddle)
+      this.paddle.body.setCollideWorldBounds(true)
+      this.paddle.body.setImmovable(true)
 
-        this.add.shader('Plasma', 0, 412, 800, 172).setOrigin(0);
+      // Ball
+      this.ball = this.add.ellipse(400, 300, 15, 15, 0xFFFFFF) as any
+      this.physics.add.existing(this.ball)
+      this.ball.body.setCollideWorldBounds(true)
+      this.ball.body.setVelocity(Phaser.Math.Between(-100, 100),300)
+      this.ball.body.bounce.setTo(1, 1);
 
-        this.add.image(400, 300, 'libs');
 
-        const logo = this.add.image(400, 70, 'logo');
+      this.physics.add.collider(this.paddle, this.ball, this.paddleHitBall, undefined, this)
 
-        this.tweens.add({
-            targets: logo,
-            y: 350,
-            duration: 1500,
-            ease: 'Sine.inOut',
-            yoyo: true,
-            repeat: -1
-        })
+
+    }
+
+
+    update() {
+      const cursorKeys = this.input.keyboard.createCursorKeys()
+
+
+      if (cursorKeys.right.isDown) {
+          this.paddle.body.setVelocityX(500);
+        } else if (cursorKeys.left.isDown) {
+          this.paddle.body.setVelocityX(-500);
+        } else {
+          this.paddle.body.setVelocityX(0);
+        }
+
+        this.ballHitWorldBottom()
+    }
+
+    paddleHitBall() {
+      // randomize the trajectory of the ball when you hit it
+      this.ball.body.setVelocity(Phaser.Math.Between(-100, 100), -300)
+    }
+
+    ballHitWorldBottom() {
+      if (this.ball.body.blocked.down) {
+        console.warn('blocked')
+      }
     }
 }
 
-const config = {
+const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
     backgroundColor: '#125555',
     width: 800,
     height: 600,
-    scene: Demo
-};
+    scene: GameScene,
+    physics: {
+        default: 'arcade',
+        arcade: {
+          debug: true,
+        },
+      },
+     
+}
 
 const game = new Phaser.Game(config);
