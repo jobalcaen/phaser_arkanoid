@@ -1,12 +1,6 @@
 import 'phaser';
 import { Physics } from 'phaser';
-
-
-const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
-    active: false,
-    visible: false,
-    key: 'Game',
-  }
+import GameOverScene from './scenes/gameover';
 
 export default class GameScene extends Phaser.Scene
 {
@@ -14,15 +8,15 @@ export default class GameScene extends Phaser.Scene
     private paddle: Phaser.GameObjects.Rectangle & { body: Phaser.Physics.Arcade.Body }
     private ball: Phaser.GameObjects.Ellipse & { body: Phaser.Physics.Arcade.Body }
 
-    lives = 3
+    lives: integer
     scoreText: Phaser.GameObjects.Text
 
-    isGameStarted = false
+    isGameStarted: boolean
 
   
     constructor ()
     {
-        super('sceneConfig');
+        super('gameScene');
     }
 
     preload ()
@@ -31,6 +25,9 @@ export default class GameScene extends Phaser.Scene
     }
 
     create () {
+      this.lives = 3
+      this.isGameStarted = false;
+
       // Paddle
       this.paddle = this.add.rectangle(400, 550, 100, 10, 0xFFFFFF) as any
       this.physics.add.existing(this.paddle)
@@ -125,7 +122,7 @@ export default class GameScene extends Phaser.Scene
     hasLives() {
       if (this.lives === 0) {
         console.warn('dead')
-        this.lives = 3
+        this.scene.start('gameOverScene')
       }
     }
 
@@ -139,7 +136,7 @@ const config: Phaser.Types.Core.GameConfig = {
     backgroundColor: '#125555',
     width: 800,
     height: 600,
-    scene: GameScene,
+    scene: [ GameScene, GameOverScene ],
     physics: {
         default: 'arcade',
         arcade: {
